@@ -1,0 +1,206 @@
+:root {
+  --color-white: #fff;
+  --color-background: #fcfcf9;
+  --color-surface: #fff;
+  --color-text: #1f2121;
+  --color-primary: #21808d;
+  --color-accent: #10b981;
+}
+
+/* Reset */
+body, html {
+  margin: 0;
+  padding: 0;
+  background: var(--color-background);
+  color: var(--color-text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+  min-height: 100vh;
+}
+
+/* App container */
+.app-container {
+  max-width: 690px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 2rem 1rem;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 2px solid #e5e7eb;
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.header-controls {
+  display: flex;
+  gap: 0.7rem;
+  align-items: center;
+}
+
+/* Buttons */
+.btn {
+  padding: 0.5rem 1.1rem;
+  background: var(--color-primary);
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  font-weight: 500;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+  outline: none;
+}
+
+.btn:active {
+  background: #1d737f;
+}
+.btn--secondary {
+  background: #10b981;
+}
+.btn--outline {
+  background: transparent;
+  color: var(--color-primary);
+  border: 1px solid var(--color-primary);
+}
+.btn--sm {
+  padding: 0.35rem 0.8rem;
+  font-size: 0.95rem;
+}
+
+/* Instructions panel */
+.instructions-panel {
+  margin-bottom: 1rem;
+}
+.instructions-panel.hidden { display: none; }
+.instructions-list {
+  margin: 0;
+  padding-left: 1.2rem;
+  font-size: 16px;
+}
+.card {
+  background: #fff;
+  border-radius: 10px;
+  margin: 0 auto;
+  box-shadow: 0 2px 10px 0 #00000018;
+  max-width: 480px;
+  padding: 1rem;
+}
+.card__body { padding: 0.5rem 0; }
+
+/* Response grid */
+.response-container {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  margin-bottom: 1.1rem;
+}
+.response-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.2rem;
+  margin: 1rem auto 1rem auto;
+  max-width: 420px;
+}
+.response-btn {
+  font-size: 1.4rem;
+  padding: 1.2em 0;
+  border-radius: 10px;
+  background: #e5e7eb;
+  border: none;
+  cursor: pointer;
+  font-weight: 700;
+  transition: background 0.13s, box-shadow 0.18s;
+  outline: none;
+  position: relative;
+  min-height: 52px;
+}
+.response-btn.selected,
+.response-btn:focus {
+  background: var(--color-primary);
+  color: #fff;
+  box-shadow: 0 0 0 3px #21808d55;
+  z-index: 1;
+}
+
+.status-display {
+  text-align: center;
+  margin-bottom: 0.5rem;
+  font-size: 1.08rem;
+  color: #21808d;
+}
+
+/* Admin Panel */
+.admin-panel {
+  margin-top: 1.5rem;
+}
+.admin-panel.hidden { display: none; }
+.admin-controls { margin-top: 0.7rem; }
+.form-group {
+  margin-bottom: 1.2rem;
+}
+.input-group {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.3rem;
+}
+input[type="text"] {
+  padding: 0.5rem 0.8rem;
+  border-radius: 4px;
+  border: 1px solid #bbb;
+  font-size: 1.1rem;
+}
+.response-list {
+  border: 1px solid #eee;
+  border-radius: 6px;
+  background: #f4faff;
+  padding: 0.5rem;
+  min-height: 32px;
+  font-size: 1.07rem;
+}
+.speech-controls {
+  display: flex;
+  gap: 1rem;
+}
+.slider-group {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+/* PWA Banners & Toasts */
+.pwa-banner { /* ...see next file for advanced banner styling... */ }
+.pwa-status { margin-left: 0.5rem; }
+
+.status-online,
+.status-offline {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  font-size: 8px;
+  line-height: 1;
+}
+.status-online {
+    background: #10b981;
+}
+.status-offline {
+    background: #ef4444;
+}
+
+/* Responsive/mobile */
+@media (max-width: 600px) {
+  .app-container {
+    padding: 0.5rem 0.1rem 1.5rem 0.1rem;
+  }
+  .response-grid {
+    gap: 0.5rem;
+  }
+}
+
+/* Hide when app is installed as PWA */
+@media (display-mode: standalone) {
+  .pwa-banner { display: none; }
+}
