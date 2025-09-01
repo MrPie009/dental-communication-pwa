@@ -13,9 +13,6 @@ class DentalCommunicationApp {
         this.isAdminMode = false;
         this.gridColumns = 2;
         this.nextId = 3;
-
-        // Load any stored custom responses
-        this.loadCustomResponses();
         this.init();
     }
 
@@ -131,10 +128,10 @@ class DentalCommunicationApp {
         const val = input.value.trim();
         if (val && this.responses.length < 8) {
             this.responses.push({id: this.nextId++, text: val, isDefault: false});
-            this.saveCustomResponses();
             this.renderResponses();
             this.updateResponseList();
             input.value = "";
+            if (window.saveCurrentDentistConfig) window.saveCurrentDentistConfig();
         }
     }
 
@@ -153,39 +150,143 @@ class DentalCommunicationApp {
                 delBtn.style.marginLeft = "1rem";
                 delBtn.onclick = () => {
                     this.responses.splice(idx, 1);
-                    this.saveCustomResponses();
                     this.renderResponses();
                     this.updateResponseList();
+                    if (window.saveCurrentDentistConfig) window.saveCurrentDentistConfig();
                 };
                 div.appendChild(delBtn);
             }
             list.appendChild(div);
         });
     }
-
-    saveCustomResponses() {
-        const custom = this.responses.filter(r => !r.isDefault);
-        localStorage.setItem('dentalCustomResponses', JSON.stringify(custom));
-    }
-
-    loadCustomResponses() {
-        let custom = [];
-        try {
-            custom = JSON.parse(localStorage.getItem('dentalCustomResponses') || "[]");
-        } catch {}
-        if (Array.isArray(custom)) {
-            custom.forEach((c, i) => {
-                this.responses.push({
-                    id: this.nextId++,
-                    text: c.text,
-                    isDefault: false
-                });
-            });
-        }
-    }
 }
 
-// Launch the app!
+// Main logic including dentist login and branding
 window.addEventListener('DOMContentLoaded', () => {
     window.DentalApp = new DentalCommunicationApp();
+
+    const loginPanel = document.getElementById('dentistLoginPanel');
+    const loginBtn = document.getElementById('dentistLoginBtn');
+    const usernameInput = document.getElementById('dentistUsernameInput');
+    const logoutBtn = document.getElementById('dentistLogoutBtn');
+    let loggedInDentist = null;
+
+    function showLogin() {
+        loginPanel.style.display = 'block';
+        document.querySelector('.app-container').style.display = 'none';
+    }
+    function showApp() {
+        loginPanel.style.display = 'none';
+        document.querySelector('.app-container').style.display = '';
+    }
+    function saveDentistConfig(username, config) {
+        localStorage.setItem('dentalConfig_' + username, JSON.stringify(config));
+    }
+    function loadDentistConfig(username) {
+        let raw = localStorage.getItem('dentalConfig_' + username);
+        try {
+            return raw ? JSON.parse(raw) : null;
+        } catch (e) {
+            return null;
+        }
+    }
+    function applyDentistConfig(config) {
+        if (config.brandColor) {
+            document.documentElement.style.setProperty('--color-primary', config.brandColor);
+            let brandColorInput = document.getElementById('brandColorInput');
+            if (brandColorInput) brandColorInput.value = config.brandColor;
+        }
+        if (config.brandLogo) {
+            let logoDiv = document.getElementById('currentBrandLogo');
+            if (logoDiv) {
+                logoDiv.innerHTML = `<img src="${config.brandLogo}" alt="Practice Logo" style="max-height:60px; max-width:180px;"/>`;
+            }
+            document.querySelector('.app-header h1').innerHTML =
+                `<img src="${config.brandLogo}" alt="Logo" style="height:28px;vertical-align:middle;margin-right:14px;"/> Patient Communication`;
+        }
+        if (config.responses) {
+            window.DentalApp.responses = config.responses;
+            window.DentalApp.renderResponses();
+            window.DentalApp.updateResponseList();
+        }
+    }
+
+    loginBtn.onclick = () => {
+        const username = usernameInput.value.trim();
+        if (!username) return alert("Please enter your code or practice name.");
+        loggedInDentist = username;
+        showApp();
+        logoutBtn.style.display = '';
+        localStorage.setItem('dentalCurrentDentist', username);
+        let config = loadDentistConfig(username);
+        if (config) applyDentistConfig(config);
+        window.saveCurrentDentistConfig = function() {
+            if (!loggedInDentist) return;
+            let config = loadDentistConfig(loggedInDentist) || {};
+            config.responses = JSON.parse(JSON.stringify(window.DentalApp.responses));
+            let colorInput = document.getElementById('brandColorInput');
+            if (colorInput) config.brandColor = colorInput.value;
+            let logoDiv = document.getElementById('currentBrandLogo');
+            if (logoDiv && logoDiv.firstChild && logoDiv.firstChild.src) {
+                config.brandLogo = logoDiv.firstChild.src;
+            }
+            saveDentistConfig(loggedInDentist, config);
+        };
+    };
+
+    logoutBtn.onclick = () => {
+        loggedInDentist = null;
+        localStorage.removeItem('dentalCurrentDentist');
+        location.reload();
+    };
+
+    let previousLogin = localStorage.getItem('dentalCurrentDentist');
+    if (previousLogin) {
+        loggedInDentist = previousLogin;
+        showApp();
+        logoutBtn.style.display = '';
+        let config = loadDentistConfig(loggedInDentist);
+        if (config) applyDentistConfig(config);
+        window.saveCurrentDentistConfig = function() {
+            if (!loggedInDentist) return;
+            let config = loadDentistConfig(loggedInDentist) || {};
+            config.responses = JSON.parse(JSON.stringify(window.DentalApp.responses));
+            let colorInput = document.getElementById('brandColorInput');
+            if (colorInput) config.brandColor = colorInput.value;
+            let logoDiv = document.getElementById('currentBrandLogo');
+            if (logoDiv && logoDiv.firstChild && logoDiv.firstChild.src) {
+                config.brandLogo = logoDiv.firstChild.src;
+            }
+            saveDentistConfig(loggedInDentist, config);
+        };
+    } else {
+        showLogin();
+        window.saveCurrentDentistConfig = function() {}; // No-op while not logged in
+    }
+
+    // Handle logo upload
+    let brandLogoInput = document.getElementById('brandLogoInput');
+    brandLogoInput && (brandLogoInput.onchange = function(e) {
+        let f = e.target.files[0];
+        if (!f) return;
+        let reader = new FileReader();
+        reader.onload = function(evt) {
+            let logoData = evt.target.result;
+            let userConfig = loadDentistConfig(loggedInDentist) || {};
+            userConfig.brandLogo = logoData;
+            saveDentistConfig(loggedInDentist, userConfig);
+            applyDentistConfig(userConfig);
+        };
+        reader.readAsDataURL(f);
+    });
+
+    // Handle theme color picker
+    let brandColorInput = document.getElementById('brandColorInput');
+    brandColorInput && (brandColorInput.onchange = function(e) {
+        let color = e.target.value;
+        document.documentElement.style.setProperty('--color-primary', color);
+        let userConfig = loadDentistConfig(loggedInDentist) || {};
+        userConfig.brandColor = color;
+        saveDentistConfig(loggedInDentist, userConfig);
+    });
 });
